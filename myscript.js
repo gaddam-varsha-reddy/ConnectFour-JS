@@ -2,7 +2,7 @@
 var board,rows=6,columns=7,gameover=false,coOrd,x,y,
 vacantRow,colorPlacement,activeplayer=1,count,gamestatus,
 modal,modalImg,modalText,modaltitle,opponent,playAgainBtn,exitGameBtn,col_array,
-homepage,gamepage,totalPlayers=2,winnerimg,new_col,row,col,opp_piece,count_Array,
+homepage,gamepage,totalPlayers=2,winnerimg,new_col,row,col,opp_piece,count_Array,iIndex,
 valid_locations,best_score,best_col,score,temp_board,row_array,Window_Length=4,window_array=[];
 
 opponent=document.getElementById("player2-Name").textContent;
@@ -104,21 +104,16 @@ function evaluate_window(window_array,piece){
     window_array.forEach(element => {
         count_Array[element] = (count_Array[element] || 0) + 1;
     });
-    if(count_Array[piece]==4){
-        score+=100;
-    }
-    else if(count_Array[piece]==3 && count_Array[' ']==1){
+    if(count_Array[piece]==4)
+        score+=200;
+    else if(count_Array[piece]==3 && count_Array[' ']==1)
+        score+=50;
+    else if(count_Array[piece]==2 && count_Array[' ']==2)
         score+=10;
-    }
-    else if(count_Array[piece]==2 && count_Array[' ']==2){
-        score+=5;
-    }
-    if(count_Array[opp_piece]==3 && count_Array[' ']==1){
+    if(count_Array[opp_piece]==3 && count_Array[' ']==1)
         score-=80;
-    }
-    if(count_Array[opp_piece]==2 && count_Array[' ']==2){
-        score=-10;
-    }
+    if(count_Array[opp_piece]==2 && count_Array[' ']==2)
+        score-=15;
     return score;
 }
 function score_position(temp_board,piece){
@@ -137,55 +132,86 @@ function score_position(temp_board,piece){
 
   score+=center_count;
   //*3-giving priority to center
+
     for(let r=0;r<rows;r++){
         row_array=[];
         for(let i=0;i<columns;i++){
             row_array.push(temp_board[r][i]);
         }
-        for(let c=0;c<columns-3;c++){
-            window_array=[];
-            for(let i=0;i<Window_Length;i++){
-                window_array.push(row_array[c+i]);
-            }
-                score+= evaluate_window(window_array, piece);
-        }
+        // for(let c=0;c<columns-3;c++){
+        //     window_array=[];
+        //     for(let i=0;i<Window_Length;i++){
+        //         window_array.push(row_array[c+i]);
+        //     }
+        //         score+= evaluate_window(window_array, piece);
+        // }
+        score+=calculate_windowArray(row_array,columns-3,piece);
     }
     for(let c=0;c<columns;c++){
          col_array=[];
          for(let i=0;i<rows;i++){
             col_array.push(temp_board[i][c]);
          }
-        for(let r=0;r<rows-3;r++){
-            window_array=[];
-            for(let i=0;i<Window_Length;i++){
-                window_array.push(col_array[r+i]);
-            }
-                score+= evaluate_window(window_array, piece);
-            }
+        // for(let r=0;r<rows-3;r++){
+        //     window_array=[];
+        //     for(let i=0;i<Window_Length;i++){
+        //         window_array.push(col_array[r+i]);
+        //     }
+        //         score+= evaluate_window(window_array, piece);
+        //     }
+        score+=calculate_windowArray(col_array,rows-3,piece);
         }
 
-    for(let r=0;r<rows-3;r++){
-           for(let c=0;c<columns-3;c++){
-               window_array=[];
-               for(let i=0;i<Window_Length;i++){
-                       window_array.push(temp_board[r+i][c+i]);
-               }
-                score+= evaluate_window(window_array, piece);
-                  }
-          }
-    for(let r=0;r<rows-3;r++){
-            for(let c=0;c<columns-3;c++){
-                window_array=[];
-                for(let i=0;i<Window_Length;i++){
-                        window_array.push(temp_board[r+3-i][c+i]);
-                }
-                score+= evaluate_window(window_array, piece);
-               }
-    } 
+    // for(let r=0;r<rows-3;r++){
+    //        for(let c=0;c<columns-3;c++){
+    //            window_array=[];
+    //            for(let i=0;i<Window_Length;i++){
+    //                    window_array.push(temp_board[r+i][c+i]);
+    //            }
+    //             score+= evaluate_window(window_array, piece);
+    //               }
+    //       }
+        score+=calculate_DiagonalwindowArray(rows-3,columns-3,piece,"down_slope");
+    // for(let r=0;r<rows-3;r++){
+    //         for(let c=0;c<columns-3;c++){
+    //             window_array=[];
+    //             for(let i=0;i<Window_Length;i++){
+    //                     window_array.push(temp_board[r+3-i][c+i]);
+    //             }
+    //             score+= evaluate_window(window_array, piece);
+    //            }
+    // } 
+        score+=calculate_DiagonalwindowArray(rows-3,columns-3,piece,"upward_slope");
     return score;
 
 }
-
+function calculate_DiagonalwindowArray(totalRows,totalColumns,piece,slope){
+    let sum=0;
+     for(let r=0;r<totalRows;r++){
+            for(let c=0;c<totalColumns;c++){
+                window_array=[];
+                for(let i=0;i<Window_Length;i++){
+                        if(slope=="upward-slope")
+                            window_array.push(temp_board[r+3-i][c+i]);
+                        else
+                            window_array.push(temp_board[r+i][c+i]);
+                }
+                sum+= evaluate_window(window_array, piece);
+               }
+    } 
+    return sum;
+}
+function calculate_windowArray(temp_array,totalColumns,piece){
+    let sum=0;
+    for(let c=0;c<totalColumns;c++){
+        window_array=[];
+        for(let i=0;i<Window_Length;i++){
+            window_array.push(temp_array[c+i]);
+        }
+            sum+= evaluate_window(window_array, piece);
+    }
+    return sum;
+}
 function pick_best_move(board,piece){
     valid_locations =get_valid_locations(board);
     best_score=-1000;
@@ -251,6 +277,7 @@ function updateName(no){
 }
 function removeColors(i,j,no){
     document.getElementById(`${i}-${j}`).classList.remove(`player${no}Color`);
+    document.getElementById(`${i}-${j}`).classList.remove("winning-tiles");
 }
 function newGame(){
     for(let i=0;i<rows;i++){
@@ -266,36 +293,51 @@ function newGame(){
     gameover=false;  
 }
 function winningCheck(board,player){
-    for(let i=0;i<rows;i++){
-        for(let j=0;j<columns-3;j++){
-            if(CheckingConditions(board,i,j,i,j+1,i,j+2,i,j+3,player))
-                return true;
-        }
-    }
-    for(let i=0;i<rows-3;i++){
-        for(let j=0;j<columns;j++){
-            if(CheckingConditions(board,i,j,i+1,j,i+2,j,i+3,j,player))
-                return true;
-        }
-    }
-    for(let i=3;i<rows;i++){
-        for(let j=0;j<columns-3;j++){
-            if(CheckingConditions(board,i,j,i-1,j+1,i-2,j+2,i-3,j+3,player))
-                return true;
-        }
-    }
-    for(let i=0;i<rows-3;i++){
-        for(let j=0;j<columns-3;j++){
-            if(CheckingConditions(board,i,j,i+1,j+1,i+2,j+2,i+3,j+3,player))
-                return true;
-        }
-    }
+    if(loop_allDirections(board,0,rows,columns-3,player))
+        return true;
+    else if(loop_allDirections(board,0,rows-3,columns,player))
+        return true;
+    else if(loop_allDirections(board,3,rows,columns-3,player))
+        return true;
+    else if(loop_allDirections(board,0,rows-3,columns-3,player))
+        return true;
+
+}  
+function Coloring_winningTiles(a,b){
+    document.getElementById(`${a}-${b}`).classList.add("winning-tiles");
 }
 function CheckingConditions(board,a1,b1,a2,b2,a3,b3,a4,b4,player){
-    if(board[a1][b1]==player && board[a2][b2]==player
-        && board[a3][b3]==player && board[a4][b4]==player){
-            return true;
-        }
+            if(board[a1][b1]==player && board[a2][b2]==player
+                && board[a3][b3]==player && board[a4][b4]==player){
+                    Coloring_winningTiles(a1,b1);
+                    Coloring_winningTiles(a2,b2);
+                    Coloring_winningTiles(a3,b3);
+                    Coloring_winningTiles(a4,b4);
+                    return true;
+                }
+}
+function loop_allDirections(board,iIndex,totalRows,totalColumns,player){
+    for(let i=iIndex;i<totalRows;i++){
+       for(let j=0;j<totalColumns;j++){
+            if(totalRows==rows && totalColumns==columns-3 && iIndex==3){
+                if(CheckingConditions(board,i,j,i-1,j+1,i-2,j+2,i-3,j+3,player))
+                    return true;
+                }
+            else if(totalRows==rows-3 && totalColumns==columns){
+                if(CheckingConditions(board,i,j,i+1,j,i+2,j,i+3,j,player))
+                    return true;
+            }
+           else if(totalRows==rows && totalColumns==columns-3){
+                if(CheckingConditions(board,i,j,i,j+1,i,j+2,i,j+3,player))
+                    return true;
+            }
+           else if(totalRows==rows-3 && totalColumns==columns-3){
+            if(CheckingConditions(board,i,j,i+1,j+1,i+2,j+2,i+3,j+3,player))
+                 return true;
+           }
+       }
+    }
+
 }
 function addModalContent(playerno){
     gameover=true;
@@ -316,7 +358,7 @@ function addModalContent(playerno){
          modaltitle.textContent="Oops!!";
     }
     modalImg.appendChild(winnerimg);
-    setTimeout(openModal, 1000);
+    setTimeout(openModal, 1500);
  }
  
  function openModal() {
